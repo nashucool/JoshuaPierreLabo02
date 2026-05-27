@@ -25,6 +25,13 @@ def get_orders_from_redis(limit=9999):
 
     # récupérer les clés order:*
     order_keys = r.keys("order:*")
+    
+    # trier par id décroissant
+    order_keys = sorted(
+        order_keys,
+        key=lambda x: int(x.split(":")[1]),
+        reverse=True
+    )
 
     orders = []
 
