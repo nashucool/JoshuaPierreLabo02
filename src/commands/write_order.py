@@ -99,31 +99,75 @@ def delete_order(order_id: int):
 
 def add_order_to_redis(order_id, user_id, total_amount, items):
     """Insert order to Redis"""
+
     r = get_redis_conn()
-    print(r)
+
+    redis_key = f"order:{order_id}"
+
+    order_data = {
+        "id": order_id,
+        "user_id": user_id,
+        "total_amount": total_amount,
+        "items": str(items)
+    }
+
+    r.hset(redis_key, mapping=order_data)
+
+    for item in items:
+        product_id = item["product_id"]
+        quantity = int(item["quantity"])
+
+    r.incr(f"product:{product_id}", quantity)
+
+    print(f"Order {order_id} added to Redis")
 
 def delete_order_from_redis(order_id):
     """Delete order from Redis"""
-    pass
+    r = get_redis_conn()
+    redis_key = f"order:{order_id}"
+    r.delete(redis_key)
+    print(f"Order {order_id} deleted from Redis")
+
+from db import get_sqlalchemy_session, get_redis_conn
+from models.order import Order
 
 def sync_all_orders_to_redis():
     """ Sync orders from MySQL to Redis """
+
     # redis
     r = get_redis_conn()
-    orders_in_redis = r.keys(f"order:*")
+    orders_in_redis = r.keys("order:*")
     rows_added = 0
+
     try:
         if len(orders_in_redis) == 0:
+
             # mysql
-            orders_from_mysql = []
+            session = get_sqlalchemy_session()
+            orders_from_mysql = session.query(Order).all()
+
             for order in orders_from_mysql:
-                # TODO: terminez l'implementation
-                print(order)
+
+                # création de clé redis pour chaque commande
+                redis_key = f"order:{order.id}"
+
+                # insertion de la commande dans redis
+                r.hset(redis_key, mapping={
+                    "id": order.id,
+                    "user_id": order.user_id,
+                    "total_amount": order.total_amount
+                })
+
+                print(f"Order synced: {redis_key}")
+
             rows_added = len(orders_from_mysql)
+
         else:
             print('Redis already contains orders, no need to sync!')
+
     except Exception as e:
         print(e)
         return 0
+
     finally:
         return len(orders_in_redis) + rows_added

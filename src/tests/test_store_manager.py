@@ -7,6 +7,9 @@ from commands.write_order import sync_all_orders_to_redis
 from controllers.order_controller import create_order, remove_order
 from db import get_redis_conn
 from views.report_view import show_highest_spending_users, show_best_sellers
+from queries.read_order import get_highest_spending_users
+from db import get_sqlalchemy_session
+from models.order import Order
 
 def test_sync_all_orders_to_redis():     
     orders_added = sync_all_orders_to_redis()
@@ -46,3 +49,5 @@ def test_report_best_sellers():
     assert "<ul>" in report_html
     assert "<li>" in report_html
     assert "Les articles les plus vendus" in report_html
+
+

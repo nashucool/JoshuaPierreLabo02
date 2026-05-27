@@ -5,6 +5,7 @@ Auteurs : Gabriel C. Ullmann, Fabio Petrillo, 2025
 """
 from commands.write_order import add_order, delete_order, sync_all_orders_to_redis
 from queries.read_order import get_orders_from_mysql
+from queries.read_order import get_highest_spending_users, get_best_sellers
 
 def create_order(user_id, items):
     """Create order, use WriteOrder model"""
@@ -46,5 +47,8 @@ def populate_redis_from_mysql():
 
 def get_report_highest_spending_users():
     """Get orders report: highest spending users"""
-    # TODO: appeler la méthode correspondante dans read_order.py
-    return []
+    return get_highest_spending_users()
+
+def get_report_best_sellers():
+    """Get orders report: best selling products"""
+    return get_best_sellers()
